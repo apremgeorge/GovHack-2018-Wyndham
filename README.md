@@ -1,2 +1,1 @@
-# GovHack-2018-Wyndham
-Predict Wyndham Roads
+Python Flask code and R code developed for web application to predict road accidents.

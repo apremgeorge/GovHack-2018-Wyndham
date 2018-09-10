@@ -1,0 +1,213 @@
+
+# Loading Packages
+
+```{r, warning=FALSE, message=FALSE}
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+library(tidyverse)
+library(GGally)
+library(plyr)
+library(cowplot)
+library(magrittr)
+```
+
+# Loading Data
+
+```{r}
+Wyn_Crash <- read.csv("Wyndham_Road_Crashes_Cleaned.csv")
+```
+
+# Hypothesis tests for independency of Serious Injury on Council Variables
+
+```{r}
+summary(xtabs(formula = FATALITYCOUNTS + SERIOUSINJURYCOUNTS ~ ALCOHOLTIME + ACCIDENT_TIME, data = Wyn_Crash))
+summary(xtabs(formula = FATALITYCOUNTS + SERIOUSINJURYCOUNTS ~ ALCOHOLTIME + LIGHT_CONDITION, data = Wyn_Crash))
+summary(xtabs(formula = FATALITYCOUNTS + SERIOUSINJURYCOUNTS ~ ALCOHOLTIME + ROAD_GEOMETRY, data = Wyn_Crash))
+summary(xtabs(formula = FATALITYCOUNTS + SERIOUSINJURYCOUNTS ~ ALCOHOLTIME + SPEED_ZONE, data = Wyn_Crash))
+summary(xtabs(formula = FATALITYCOUNTS + SERIOUSINJURYCOUNTS ~ ALCOHOLTIME + NODE_TYPE, data = Wyn_Crash))
+```
+
+```{r}
+summary(xtabs(formula = FATALITYCOUNTS + SERIOUSINJURYCOUNTS ~ ACCIDENT_TIME + LIGHT_CONDITION, data = Wyn_Crash))
+summary(xtabs(formula = FATALITYCOUNTS + SERIOUSINJURYCOUNTS ~ ACCIDENT_TIME + ROAD_GEOMETRY, data = Wyn_Crash))
+summary(xtabs(formula = FATALITYCOUNTS + SERIOUSINJURYCOUNTS ~ ACCIDENT_TIME + SPEED_ZONE, data = Wyn_Crash))
+summary(xtabs(formula = FATALITYCOUNTS + SERIOUSINJURYCOUNTS ~ ACCIDENT_TIME + NODE_TYPE, data = Wyn_Crash))
+```
+
+```{r}
+summary(xtabs(formula = FATALITYCOUNTS + SERIOUSINJURYCOUNTS ~ LIGHT_CONDITION + ROAD_GEOMETRY, data = Wyn_Crash))
+summary(xtabs(formula = FATALITYCOUNTS + SERIOUSINJURYCOUNTS ~ LIGHT_CONDITION + SPEED_ZONE, data = Wyn_Crash))
+summary(xtabs(formula = FATALITYCOUNTS + SERIOUSINJURYCOUNTS ~ LIGHT_CONDITION + NODE_TYPE, data = Wyn_Crash))
+```
+
+```{r}
+summary(xtabs(formula = FATALITYCOUNTS + SERIOUSINJURYCOUNTS ~ ROAD_GEOMETRY + SPEED_ZONE, data = Wyn_Crash))
+summary(xtabs(formula = FATALITYCOUNTS + SERIOUSINJURYCOUNTS ~ ROAD_GEOMETRY + NODE_TYPE, data = Wyn_Crash))
+summary(xtabs(formula = FATALITYCOUNTS + SERIOUSINJURYCOUNTS ~ NODE_TYPE + SPEED_ZONE, data = Wyn_Crash))
+```
+
+# Data Visualisation
+
+```{r,fig.height=5, fig.width=12, warning=FALSE}
+p1 <- ggplot(Wyn_Crash, aes(x=YEAR,y=mean(INJ_OR_FATAL),colour=ACCIDENT_TIME)) + 
+  geom_bar(stat="identity") + 
+  facet_wrap(~ACCIDENT_TIME, scales="fixed") + 
+  theme(axis.text.x=element_text(face="bold",size=8,vjust=0.1),
+        axis.text.y=element_text(face="bold",size=9,hjust=1),
+        axis.title.x=element_text(size=12,face="bold"),
+        axis.title.y=element_text(size=12,face="bold"),
+        strip.background=element_rect(fill="lightblue",colour="black"),
+        strip.text=element_text(size=10,colour="black",face="bold"),
+        legend.position="none") + 
+  scale_y_continuous("Injuries and Fatalities") +
+  labs(x="YEAR")
+ 
+
+p2 <-ggplot(Wyn_Crash, aes(x=ACCIDENT_TIME,y=mean(INJ_OR_FATAL),colour=ACCIDENT_TIME)) +
+  geom_bar(stat="identity") + 
+  theme(axis.title.x=element_blank(),
+        axis.text.y=element_text(face="bold",size=10),
+        axis.title.y=element_blank(),
+        legend.position="none",
+        axis.text.x=element_text(face="bold",size=12),
+        plot.title=element_text(size=14,face="bold")) +
+  ggtitle("Total Injuries and Fatalities Over Time Zones")+ coord_flip() 
+
+p12<-plot_grid(p2,p1, ncol = 2,align = 'v', rel_heights = c(2,5))
+p12
+```
+
+```{r,fig.height=5, fig.width=12, warning=FALSE}
+p3 <- ggplot(Wyn_Crash, aes(x=YEAR,y=mean(INJ_OR_FATAL),colour=LIGHT_CONDITION)) + 
+  geom_bar(stat="identity") + 
+  facet_wrap(~LIGHT_CONDITION, scales="fixed") + 
+  theme(axis.text.x=element_text(face="bold",size=8,vjust=0.1),
+        axis.text.y=element_text(face="bold",size=9,hjust=1),
+        axis.title.x=element_text(size=12,face="bold"),
+        axis.title.y=element_text(size=12,face="bold"),
+        strip.background=element_rect(fill="lightblue",colour="black"),
+        strip.text=element_text(size=10,colour="black",face="bold"),
+        legend.position="none") + 
+  scale_y_continuous("Injuries and Fatalities") +
+  labs(x="YEAR")
+
+
+p4 <-ggplot(Wyn_Crash, aes(x=LIGHT_CONDITION,y=mean(INJ_OR_FATAL),colour=LIGHT_CONDITION)) +
+  geom_bar(stat="identity") + 
+  theme(axis.title.x=element_blank(),
+        axis.text.y=element_text(face="bold",size=10),
+        axis.title.y=element_blank(),
+        legend.position="none",
+        axis.text.x=element_text(face="bold",size=12),
+        plot.title=element_text(size=14,face="bold")) +
+  ggtitle("Total Injuries and Fatalities Over Light Condition")+ coord_flip() +
+  scale_x_discrete(labels = c("Day No Street Lights", "Dark Street Lights OFF", "Dark Street Lights ON", "Dark Street Lights Unknown","Day","Dusk / Dawn", "Unknown"))
+
+p34<-plot_grid(p4,p3, ncol = 2,align = 'v', rel_heights = c(2,5))
+p34
+```
+
+```{r,fig.height=5, fig.width=12}
+Wyn_Crash$ALCOHOLTIME <- factor(Wyn_Crash$ALCOHOLTIME,levels=c('No','Yes'),labels=c('Not Alcohol Times','Alcohol Times Applied'))
+p5 <- ggplot(data = Wyn_Crash,aes(x = NODE_TYPE,y = ROAD_GEOMETRY,fill = INJ_OR_FATAL)) + geom_raster() + 
+  labs(y = "Road Geometry",x = "Node Type",title="Injuries and Fatalities over Road Geometry and Node Type vs Alcohol Times") +
+   facet_grid(ALCOHOLTIME~.)+scale_fill_gradient(high="red",low="orange" ,name="Injuries\n& Fatalities") + 
+  theme(axis.title.x=element_blank(),
+        axis.text.y=element_text(face="bold",size=10),
+        axis.title.y=element_blank(),
+        axis.text.x=element_text(face="bold",size=12),
+        plot.title=element_text(size=14,face="bold"))
+p5
+p6 <-ggplot(Wyn_Crash, aes(x=SPEED_ZONE,y=mean(INJ_OR_FATAL),colour=SPEED_ZONE)) +
+  geom_bar(stat="identity") + 
+  theme(axis.title.x=element_blank(),
+        axis.text.y=element_text(face="bold",size=10),
+        axis.title.y=element_blank(),
+        legend.position="none",
+        axis.text.x=element_text(face="bold",size=12),
+        strip.text=element_text(size=10,colour="black",face="bold"),
+        plot.title=element_text(size=14,face="bold")) +
+  ggtitle("Total Injuries and Fatalities Over Speed Zones") + coord_flip()
+p6
+
+p56<-plot_grid(p6,p5, ncol = 2,align = 'v', rel_heights = c(2,5))
+p56
+```
+
+# Logistic Regression Model for Fatality
+
+```{r}
+MODEL.FATALITY<-glm(formula = FATALITY ~ (ALCOHOLTIME + ACCIDENT_TIME + LIGHT_CONDITION + ROAD_GEOMETRY + SPEED_ZONE + NODE_TYPE ), family = binomial(link = logit), data = Wyn_Crash)
+```
+
+# Prediction of Fatality
+
+```{r}
+predict.Fatal <- data.frame(ALCOHOLTIME = "Alcohol Times", ACCIDENT_TIME = "8PM-12AM", LIGHT_CONDITION = "Dark Street lights off",ROAD_GEOMETRY ="Not at intersection", SPEED_ZONE ="50 km/hr", NODE_TYPE="Non-Intersection")
+predict(object = MODEL.FATALITY, newdata = predict.Fatal, type = "response")*100
+
+#Probability of Fatality: 26.17%
+```
+
+```{r}
+predict.Fatal <- data.frame(ALCOHOLTIME = "Alcohol Times", ACCIDENT_TIME = "8PM-12AM", LIGHT_CONDITION = "Day", ROAD_GEOMETRY ="Not at intersection", SPEED_ZONE ="50 km/hr", NODE_TYPE="Non-Intersection")
+predict(object = MODEL.FATALITY, newdata = predict.Fatal, type = "response")*100
+
+#Probability of Fatality: 1.03%
+
+# Reduced to 1% which is a massive Care for Lives
+```
+
+# Logistic Regression Model for Injury
+
+```{r}
+MODEL.INJURY<-glm(formula = SERIOUSINJURY ~ (ALCOHOLTIME + ACCIDENT_TIME + LIGHT_CONDITION + ROAD_GEOMETRY + SPEED_ZONE + NODE_TYPE ), family = binomial(link = logit), data = Wyn_Crash)
+```
+
+# Prediction of Injury
+
+```{r}
+predict.Injury <- data.frame(ALCOHOLTIME = "Alcohol Times", ACCIDENT_TIME = "12AM-5AM", LIGHT_CONDITION = "Dusk/Dawn",ROAD_GEOMETRY ="Cross intersection", SPEED_ZONE ="60 km/hr", NODE_TYPE="Off Road")
+predict(object = MODEL.INJURY, newdata = predict.Injury, type = "response")*100
+
+#Probability of Serious Injury: 91%
+```
+
+```{r}
+predict.Injury <- data.frame(ALCOHOLTIME = "Alcohol Times", ACCIDENT_TIME = "12AM-5AM", LIGHT_CONDITION = "Day", ROAD_GEOMETRY ="Y intersection", SPEED_ZONE ="60 km/hr", NODE_TYPE="Intersection")
+predict(object = MODEL.INJURY, newdata = predict.Injury, type = "response")*100
+
+#Probability of Serious Injury: 49.47%
+
+#Reduced by 41% 
+```
+
+# Logistic Regression Model for Hazard
+
+```{r}
+MODEL.HAZARD<-glm(formula = PED_MOT_CYC ~ (ALCOHOLTIME + ACCIDENT_TIME + LIGHT_CONDITION + ROAD_GEOMETRY + SPEED_ZONE + NODE_TYPE ), family = binomial(link = logit), data = Wyn_Crash)
+```
+
+# Prediction of Hazard for Pedestrians, Motorist and Cyclist
+
+```{r}
+predict.PMC <- data.frame(ALCOHOLTIME = "Alcohol Times", ACCIDENT_TIME = "6PM-8PM", LIGHT_CONDITION = "Dark Street lights on",ROAD_GEOMETRY ="Not at intersection", SPEED_ZONE ="50 km/hr", NODE_TYPE="Off Road")
+predict(object = MODEL, newdata = predict.PMC, type = "response")*100
+
+#Probability of Pedestrian, Motorist and Cyclist Hazard: 99.99%
+```
+
+```{r}
+predict.PMC <- data.frame(ALCOHOLTIME = "Alcohol Times", ACCIDENT_TIME = "6PM-8PM", LIGHT_CONDITION = "Dark Street lights on", ROAD_GEOMETRY ="T intersection", SPEED_ZONE ="40 km/hr", NODE_TYPE="Intersection")
+predict(object = MODEL, newdata = predict.PMC, type = "response")*100
+
+#Probability of Pedestrian, Motorist and Cyclist Hazard: 44.18%
+
+#Reduced by 56%
+```
+
+
+
+
